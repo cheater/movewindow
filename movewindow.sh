@@ -123,6 +123,7 @@ ranges_extended=$(
     for r in ${ranges[@]}; do echo $r; break; done
     )
 
+# search through the sub-displays to find the one we're on currently.
 for range_and_offset in ${ranges[@]}; do
     range=${range_and_offset/;*/}
     # echo $range >> "$log" # dbg
@@ -132,6 +133,8 @@ for range_and_offset in ${ranges[@]}; do
     && [ "$horiz_center" -le "$range_right" ]; then
         echo "found in $range_and_offset" >> "$log" # dbg
         passed_current=0
+        # search through the sub-displays again to find one after the one we're
+        # on currently; we also need to wrap around once.
         for range_and_offset2 in ${ranges_extended[@]}; do
             if [ "$range_and_offset2" == "$range_and_offset" ]; then
                 passed_current=1
