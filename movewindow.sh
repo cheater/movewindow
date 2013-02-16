@@ -40,6 +40,10 @@ declare -a ranges
 declare -i monitor_num
 monitor_num=0
 
+# ranges is an array which contains entries of the form x1,x2;y where x1 is
+# the starting pixel column on the screen and x2 is the final pixel column and
+# y is the offset from top of desktop (i.e. starting pixel row). This is output
+# for every monitor.
 ranges=$(xrandr -q | awk '/ connected/{print $3}' | while read info; do
     # the output is: widthxheight+horizontal_offset+vertical_offset
     declare -i vertical_offset
