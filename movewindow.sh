@@ -90,13 +90,13 @@ ranges=$(xrandr -q | awk '/ connected/{print $3}' | while read info; do
         offset=${range_and_offset/*;/}
         width="$range_right-$range_left"
 
-        echo width is "$width" >> "$log"
+        # echo width is "$width" >> "$log" # dbg
         if [ "$width" -le "$max_width" ]; then
-            echo skipping "$range_and_offset" >> "$log"
+            # echo skipping "$range_and_offset" >> "$log" # dbg
             echo "$range_and_offset"
             continue
             fi
-        echo not skipping "$range_and_offset" >> "$log"
+        # echo not skipping "$range_and_offset" >> "$log" # dbg
 
         parts="$width/$preferred_width" # $parts contains the amount of
         # sub-monitors that will be created.
@@ -117,7 +117,7 @@ ranges=$(xrandr -q | awk '/ connected/{print $3}' | while read info; do
             done
         done)
 
-echo ${ranges[@]} >> "$log" # dbg
+# echo ${ranges[@]} >> "$log" # dbg
 ranges_extended=$(
     for r in ${ranges[@]}; do echo $r; done
     for r in ${ranges[@]}; do echo $r; break; done
@@ -131,7 +131,7 @@ for range_and_offset in ${ranges[@]}; do
     range_right=${range/*,/}
     if [ "$range_left" -le "$horiz_center" ]\
     && [ "$horiz_center" -le "$range_right" ]; then
-        echo "found in $range_and_offset" >> "$log" # dbg
+        # echo "found in $range_and_offset" >> "$log" # dbg
         passed_current=0
         # search through the sub-displays again to find one after the one we're
         # on currently; we also need to wrap around once.
@@ -157,6 +157,7 @@ for range_and_offset in ${ranges[@]}; do
                 #
                 # do note, SCREEN has nothing to do with the monitor the window
                 # is being displayed on.
+                # dbg
                 # xdotool getactivewindow getwindowgeometry --shell >> "$log"
 
                 gravity=0
