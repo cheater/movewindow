@@ -12,7 +12,8 @@
 # log="/tmp/dbglog" # dbg
 # echo "-----------" >> "$log" # dbg
 
-wmctrl -r :ACTIVE: -b remove,maximized_horz,maximized_vert
+wmctrl -r :ACTIVE: -b remove,maximized_horz
+wmctrl -r :ACTIVE: -b remove,maximized_vert
 
 # get the center of the window.
 eval $(xdotool getactivewindow getwindowgeometry --shell)
