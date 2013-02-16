@@ -118,9 +118,9 @@ ranges=$(xrandr -q | awk '/ connected/{print $3}' | while read info; do
         done)
 
 echo ${ranges[@]} >> "$log" # dbg
-ranges_twice=$(
-    for range_and_offset in ${ranges[@]}; do echo $range_and_offset; done
-    for range_and_offset in ${ranges[@]}; do echo $range_and_offset; done
+ranges_extended=$(
+    for r in ${ranges[@]}; do echo $r; done
+    for r in ${ranges[@]}; do echo $r; break; done
     )
 
 for range_and_offset in ${ranges[@]}; do
@@ -132,7 +132,7 @@ for range_and_offset in ${ranges[@]}; do
     && [ "$horiz_center" -le "$range_right" ]; then
         echo "found in $range_and_offset" >> "$log" # dbg
         passed_current=0
-        for range_and_offset2 in ${ranges_twice[@]}; do
+        for range_and_offset2 in ${ranges_extended[@]}; do
             if [ "$range_and_offset2" == "$range_and_offset" ]; then
                 passed_current=1
                 continue
