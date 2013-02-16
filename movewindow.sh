@@ -9,6 +9,12 @@
 # size of the window equal to the vertical size of the previous monitor it was
 # displayed on.
 
+# Now you can also break down very wide monitors into smaller ones. Define your
+# preferred width to break down to (that is the minimum width a sub-monitor
+# will have) and set the maximum width after which breaking down monitors
+# should occur, using the $preferred_width and $max_width variables
+# respectively.
+
 # log="/tmp/dbglog" # dbg
 # echo "-----------" >> "$log" # dbg
 preferred_width=800
