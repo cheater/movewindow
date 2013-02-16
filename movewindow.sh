@@ -128,15 +128,17 @@ for range_and_offset in ${ranges[@]}; do
     # echo $range >> "$log" # dbg
     range_left=${range/,*/}
     range_right=${range/*,/}
-    if [ "$range_left" -le "$horiz_center" ] && [ "$horiz_center" -le "$range_right" ]; then
-        # echo "found in $range_and_offset" >> "$log" # dbg
+    if [ "$range_left" -le "$horiz_center" ]\
+    && [ "$horiz_center" -le "$range_right" ]; then
+        echo "found in $range_and_offset" >> "$log" # dbg
         passed_current=0
         for range_and_offset2 in ${ranges_twice[@]}; do
             if [ "$range_and_offset2" == "$range_and_offset" ]; then
                 passed_current=1
                 continue
                 fi
-            if [ "$passed_current" -eq 1 ] && [ "$range_and_offset2" != "$range_and_offset" ]; then
+            if [ "$passed_current" -eq 1 ]\
+            && [ "$range_and_offset2" != "$range_and_offset" ]; then
                 range2=${range_and_offset2/;*/}
                 range2_left=${range2/,*/}
                 range2_right=${range2/*,/}
@@ -152,7 +154,7 @@ for range_and_offset in ${ranges[@]}; do
                 #
                 # do note, SCREEN has nothing to do with the monitor the window
                 # is being displayed on.
-                # xdotool getactivewindow getwindowgeometry --shell >> "$log" # dbg
+                # xdotool getactivewindow getwindowgeometry --shell >> "$log"
 
                 gravity=0
                 x="$range2_left"
