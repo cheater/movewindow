@@ -30,6 +30,13 @@
 preferred_width=800
 max_width=1500
 
+# If your theme uses borders, set the border thickness here. This is important
+# so that windows line up properly.
+#
+# Idea: maybe there's a way to find out about this programmatically.
+
+border=1
+
 wmctrl -r :ACTIVE: -b remove,maximized_horz
 wmctrl -r :ACTIVE: -b remove,maximized_vert
 
@@ -163,7 +170,7 @@ for range_and_offset in ${ranges[@]}; do
                 gravity=0
                 x="$range2_left"
                 y=${range_and_offset2/*;/}
-                width="$range2_right-$range2_left"
+                width="$range2_right-$range2_left-2*$border"
                 w="$width"
                 h="$HEIGHT"
                 # echo "$gravity,$x,$y,$w,$h" >> "$log" # dbg
