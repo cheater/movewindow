@@ -37,6 +37,27 @@ max_width=1500
 
 border=1
 
+# Now we're using cache for the expensive xrandr readout, so it should only
+# happen once in a while. Set the cache timeout here, in seconds.
+
+cache_timeout=4
+cache="$HOME/.movewindow_cache"
+
+declare -i delta
+cache_modtime=$(stat -c %Y "$cache")
+now=$(date +%s)
+delta="$now - $cache_modtime"
+if [ "$delta" -ge "$cache_timeout" ]; then
+    echo "generating and tee" >> "$log"
+    monitor_info=$(xrandr -q | awk '/ connected/{print $3}' | tee "$cache")
+else
+    echo "restoring" >> "$log"
+    monitor_info=$(cat "$cache")
+    touch "$cache" # if you're using this program, it probably means
+    # that you aren't messing around with monitor connections or settings,
+    # so let's re-validate the cache.
+    fi
+
 wmctrl -r :ACTIVE: -b remove,maximized_horz
 wmctrl -r :ACTIVE: -b remove,maximized_vert
 
@@ -81,7 +102,7 @@ declare -i i
 # the starting pixel column on the screen and x2 is the final pixel column and
 # y is the offset from top of desktop (i.e. starting pixel row). This is output
 # for every monitor.
-ranges=$(xrandr -q | awk '/ connected/{print $3}' | while read info; do
+ranges=$(echo "$monitor_info" | while read info; do
     # the output is: widthxheight+horizontal_offset+vertical_offset
     vertical_offset=${info/*+/}
     width=${info/x*/}
