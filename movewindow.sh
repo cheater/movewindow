@@ -17,9 +17,9 @@
 
 # log="/tmp/dbglog" # dbg
 # echo "-----------" >> "$log" # dbg
+
 preferred_width=800
 max_width=1500
-
 
 wmctrl -r :ACTIVE: -b remove,maximized_horz
 wmctrl -r :ACTIVE: -b remove,maximized_vert
