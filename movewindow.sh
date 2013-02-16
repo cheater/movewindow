@@ -9,6 +9,15 @@
 # size of the window equal to the vertical size of the previous monitor it was
 # displayed on.
 
+# You can use this tool by executing it with a key combination you set in your
+# window manager. First make sure this program is in $PATH. Then you need to
+# set up the key combo. For MATE Desktop, open mateconf-editor and navigate to
+# apps/marco/keybinding_commands and type in the name of the executable in one
+# of the items. Then, under apps/marco/global_keybindings/run_command_n, set
+# the keyboard combination. That's it! A similar procedure works for GNOME 2
+# with its metacity window manager, and there are very likely ways to do this
+# with any other desktop software.
+
 # Now you can also break down very wide monitors into smaller ones. Define your
 # preferred width to break down to (that is the minimum width a sub-monitor
 # will have) and set the maximum width after which breaking down monitors
