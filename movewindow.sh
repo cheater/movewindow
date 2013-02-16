@@ -119,8 +119,8 @@ ranges=$(xrandr -q | awk '/ connected/{print $3}' | while read info; do
 
 # echo ${ranges[@]} >> "$log" # dbg
 ranges_extended=$(
-    for r in ${ranges[@]}; do echo $r; done
-    for r in ${ranges[@]}; do echo $r; break; done
+    for r in ${ranges[@]}; do echo "$r"; done
+    for r in ${ranges[@]}; do echo "$r"; break; done
     )
 
 # search through the sub-displays to find the one we're on currently.
