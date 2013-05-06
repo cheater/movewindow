@@ -48,14 +48,14 @@ cache_modtime=$(stat -c %Y "$cache")
 now=$(date +%s)
 delta="$now - $cache_modtime"
 if [ "$delta" -ge "$cache_timeout" ]; then
-    echo "generating and tee" >> "$log"
+    # echo "generating and tee" >> "$log"
     monitor_info=$( \
         xrandr -q \
         | awk '/ connected [0-9]+x[0-9]+\+[0-9]+\+[0-9]+/{print $3}' \
         | tee "$cache" \
         )
 else
-    echo "restoring" >> "$log"
+    # echo "restoring" >> "$log"
     monitor_info=$(cat "$cache")
     touch "$cache" # if you're using this program, it probably means
     # that you aren't messing around with monitor connections or settings,
