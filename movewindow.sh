@@ -49,7 +49,11 @@ now=$(date +%s)
 delta="$now - $cache_modtime"
 if [ "$delta" -ge "$cache_timeout" ]; then
     echo "generating and tee" >> "$log"
-    monitor_info=$(xrandr -q | awk '/ connected/{print $3}' | tee "$cache")
+    monitor_info=$( \
+        xrandr -q \
+        | awk '/ connected [0-9]+x[0-9]+\+[0-9]+\+[0-9]+/{print $3}' \
+        | tee "$cache" \
+        )
 else
     echo "restoring" >> "$log"
     monitor_info=$(cat "$cache")
