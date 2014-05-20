@@ -78,10 +78,10 @@ eval $(xdotool getactivewindow getwindowgeometry --shell)
 # do note, SCREEN has nothing to do with the monitor the window is being
 # displayed on.
 
-declare -i window_left
+declare -i window_left # left border
 window_left="$X"
 declare -i window_right
-window_right="$window_left + $WIDTH"
+window_right="$window_left + $WIDTH" # right border
 let "horiz_center=($window_left+$window_right)/2" # integer division
 
 # figure out which desktop the window falls on. we only need to use the widths
