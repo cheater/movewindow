@@ -114,7 +114,8 @@ ranges=$(echo "$monitor_info" | while read info; do
     horiz_offset=${offsets/+*/}
     left="$horiz_offset"
     right="$left + $width"
-    echo "$left,$right;$vertical_offset"
+    echo "$left,$right;$vertical_offset" # we are echoing the dimensions of
+    # monitors; not virtual columns that we will move the panels to.
     done | while read range_and_offset; do
         range=${range_and_offset/;*/}
         range_left=${range/,*/}
@@ -150,6 +151,9 @@ ranges=$(echo "$monitor_info" | while read info; do
         done)
 
 # echo ${ranges[@]} >> "$log" # dbg
+# we need the ranges plus one more, so that if our window is at the last column,
+# it can jump to the first column. So we tack a copy of the first column onto
+# the end of the list/array/whatever bash has.
 ranges_extended=$(
     for r in ${ranges[@]}; do echo "$r"; done
     for r in ${ranges[@]}; do echo "$r"; break; done
