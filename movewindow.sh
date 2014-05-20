@@ -154,7 +154,7 @@ columns=$(echo "$monitor_info" | while read info; do
         done)
 
 # echo ${columns[@]} >> "$log" # dbg
-# we need the columns plus one more, so that if our window is at the last column,
+# we need the columns plus one more, so if our window is at the last column,
 # it can jump to the first column. So we tack a copy of the first column onto
 # the end of the list/array/whatever bash has.
 columns_extended=$(
