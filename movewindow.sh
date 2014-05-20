@@ -120,10 +120,10 @@ ranges=$(echo "$monitor_info" | while read info; do
     # is x1,x2;y. It is missing information on correspondence of virtual columns
     # to physical monitors, since everything we echo here is a physical monitor.
     done | while read range_and_offset; do
-        range=${range_and_offset/;*/}
-        range_left=${range/,*/}
-        range_right=${range/*,/}
-        offset=${range_and_offset/*;/}
+        range=${range_and_offset%%;*}
+        range_left=${range%%,*}
+        range_right=${range##*,}
+        offset=${range_and_offset##*;}
         width="$range_right-$range_left"
 
         # echo width is "$width" >> "$log" # dbg
@@ -166,8 +166,8 @@ ranges_extended=$(
 for range_and_offset in ${ranges[@]}; do
     range=${range_and_offset%%;*}
     # echo $range >> "$log" # dbg
-    range_left=${range/,*/}
-    range_right=${range/*,/}
+    range_left=${range%%,*}
+    range_right=${range##*,}
     if [ "$range_left" -le "$horiz_center" ]\
     && [ "$horiz_center" -le "$range_right" ]; then
         # echo "found in $range_and_offset" >> "$log" # dbg
@@ -182,8 +182,8 @@ for range_and_offset in ${ranges[@]}; do
             if [ "$passed_current" -eq 1 ]\
             && [ "$range_and_offset2" != "$range_and_offset" ]; then
                 range2=${range_and_offset2%%;*}
-                range2_left=${range2/,*/}
-                range2_right=${range2/*,/}
+                range2_left=${range2%%,*}
+                range2_right=${range2##*,}
                 # echo "found not in $range_and_offset2" >> "$log" # dbg
                 eval $(xdotool getactivewindow getwindowgeometry --shell)
                 # the above outputs something like:
