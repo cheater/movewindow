@@ -102,10 +102,11 @@ declare -i part
 declare -i start_
 declare -i end
 declare -i i
-# ranges is an array which contains entries of the form x1,x2;y where x1 is
+# ranges is an array which contains entries of the form x1,x2;y;f where x1 is
 # the starting pixel column on the screen and x2 is the final pixel column and
-# y is the offset from top of desktop (i.e. starting pixel row). This is output
-# for every virtual column.
+# y is the offset from top of desktop (i.e. starting pixel row) and finally f
+# is 1 if the virtual column takes up the whole physical screen or 0 otherwise.
+# This is output for every virtual column.
 ranges=$(echo "$monitor_info" | while read info; do
     # the output is: widthxheight+horizontal_offset+vertical_offset
     vertical_offset=${info/*+/}
@@ -115,7 +116,9 @@ ranges=$(echo "$monitor_info" | while read info; do
     left="$horiz_offset"
     right="$left + $width"
     echo "$left,$right;$vertical_offset" # we are echoing the dimensions of
-    # monitors; not virtual columns that we will move the panels to.
+    # monitors; not virtual columns that we will move the panels to. The format
+    # is x1,x2;y. It is missing information on correspondence of virtual columns
+    # to physical monitors, since everything we echo here is a physical monitor.
     done | while read range_and_offset; do
         range=${range_and_offset/;*/}
         range_left=${range/,*/}
@@ -126,7 +129,7 @@ ranges=$(echo "$monitor_info" | while read info; do
         # echo width is "$width" >> "$log" # dbg
         if [ "$width" -le "$max_width" ]; then
             # echo skipping "$range_and_offset" >> "$log" # dbg
-            echo "$range_and_offset"
+            echo "$range_and_offset;1"
             continue
             fi
         # echo not skipping "$range_and_offset" >> "$log" # dbg
@@ -146,7 +149,7 @@ ranges=$(echo "$monitor_info" | while read info; do
             else
                 end="$range_left+$i*$part"
                 fi
-            echo "$start_,$end;$offset"
+            echo "$start_,$end;$offset;0"
             done
         done)
 
@@ -161,7 +164,7 @@ ranges_extended=$(
 
 # search through the sub-displays to find the one we're on currently.
 for range_and_offset in ${ranges[@]}; do
-    range=${range_and_offset/;*/}
+    range=${range_and_offset%%;*}
     # echo $range >> "$log" # dbg
     range_left=${range/,*/}
     range_right=${range/*,/}
@@ -178,7 +181,7 @@ for range_and_offset in ${ranges[@]}; do
                 fi
             if [ "$passed_current" -eq 1 ]\
             && [ "$range_and_offset2" != "$range_and_offset" ]; then
-                range2=${range_and_offset2/;*/}
+                range2=${range_and_offset2%%;*}
                 range2_left=${range2/,*/}
                 range2_right=${range2/*,/}
                 # echo "found not in $range_and_offset2" >> "$log" # dbg
@@ -196,16 +199,23 @@ for range_and_offset in ${ranges[@]}; do
                 # dbg
                 # xdotool getactivewindow getwindowgeometry --shell >> "$log"
 
+                y_and_wholescreen=${range_and_offset2#*;}
+                wholescreen=${y_and_wholescreen#*;}
                 gravity=0
                 x="$range2_left"
-                y=${range_and_offset2/*;/}
+                y=${y_and_wholescreen%%;*}
                 width="$range2_right-$range2_left-2*$border"
                 w="$width"
                 h="$HEIGHT"
                 # echo "$gravity,$x,$y,$w,$h" >> "$log" # dbg
                 wmctrl -r :ACTIVE: -e "$gravity,$x,$y,$w,$h"
 
-                wmctrl -r :ACTIVE: -b add,maximized_vert
+                if [ "$wholescreen" -eq "1" ]; then
+                    wmctrl -r :ACTIVE: -b add,maximized_vert,maximized_horz
+                else
+                    wmctrl -r :ACTIVE: -b add,maximized_vert
+                    fi
+
                 break
                 fi
             done
