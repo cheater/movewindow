@@ -86,7 +86,7 @@ let "horiz_center=($window_left+$window_right)/2" # integer division
 
 # figure out which desktop the window falls on. we only need to use the widths
 # and horizontal offsets.
-declare -a ranges
+declare -a columns
 declare -i monitor_num
 monitor_num=0
 
@@ -102,12 +102,12 @@ declare -i part
 declare -i start_
 declare -i end
 declare -i i
-# ranges is an array which contains entries of the form x1,x2;y;f where x1 is
+# columns is an array which contains entries of the form x1,x2;y;f where x1 is
 # the starting pixel column on the screen and x2 is the final pixel column and
 # y is the offset from top of desktop (i.e. starting pixel row) and finally f
 # is 1 if the virtual column takes up the whole physical screen or 0 otherwise.
 # This is output for every virtual column.
-ranges=$(echo "$monitor_info" | while read info; do
+columns=$(echo "$monitor_info" | while read info; do
     # the output is: widthxheight+horizontal_offset+vertical_offset
     vertical_offset=${info/*+/}
     width=${info/x*/}
@@ -153,38 +153,38 @@ ranges=$(echo "$monitor_info" | while read info; do
             done
         done)
 
-# echo ${ranges[@]} >> "$log" # dbg
-# we need the ranges plus one more, so that if our window is at the last column,
+# echo ${columns[@]} >> "$log" # dbg
+# we need the columns plus one more, so that if our window is at the last column,
 # it can jump to the first column. So we tack a copy of the first column onto
 # the end of the list/array/whatever bash has.
-ranges_extended=$(
-    for r in ${ranges[@]}; do echo "$r"; done
-    for r in ${ranges[@]}; do echo "$r"; break; done
+columns_extended=$(
+    for r in ${columns[@]}; do echo "$r"; done
+    for r in ${columns[@]}; do echo "$r"; break; done
     )
 
 # search through the sub-displays to find the one we're on currently.
-for range_and_offset in ${ranges[@]}; do
-    range=${range_and_offset%%;*}
+for virtual_column in ${columns[@]}; do
+    range=${virtual_column%%;*}
     # echo $range >> "$log" # dbg
     range_left=${range%%,*}
     range_right=${range##*,}
     if [ "$range_left" -le "$horiz_center" ]\
     && [ "$horiz_center" -le "$range_right" ]; then
-        # echo "found in $range_and_offset" >> "$log" # dbg
+        # echo "found in $virtual_column" >> "$log" # dbg
         passed_current=0
         # search through the sub-displays again to find one after the one we're
         # on currently; we also need to wrap around once.
-        for range_and_offset2 in ${ranges_extended[@]}; do
-            if [ "$range_and_offset2" == "$range_and_offset" ]; then
+        for virtual_column2 in ${columns_extended[@]}; do
+            if [ "$virtual_column2" == "$virtual_column" ]; then
                 passed_current=1
                 continue
                 fi
             if [ "$passed_current" -eq 1 ]\
-            && [ "$range_and_offset2" != "$range_and_offset" ]; then
-                range2=${range_and_offset2%%;*}
+            && [ "$virtual_column2" != "$virtual_column" ]; then
+                range2=${virtual_column2%%;*}
                 range2_left=${range2%%,*}
                 range2_right=${range2##*,}
-                # echo "found not in $range_and_offset2" >> "$log" # dbg
+                # echo "found not in $virtual_column2" >> "$log" # dbg
                 eval $(xdotool getactivewindow getwindowgeometry --shell)
                 # the above outputs something like:
                 # WINDOW=70385876
@@ -199,7 +199,7 @@ for range_and_offset in ${ranges[@]}; do
                 # dbg
                 # xdotool getactivewindow getwindowgeometry --shell >> "$log"
 
-                y_and_wholescreen=${range_and_offset2#*;}
+                y_and_wholescreen=${virtual_column2#*;}
                 wholescreen=${y_and_wholescreen#*;}
                 gravity=0
                 x="$range2_left"
