@@ -105,7 +105,7 @@ declare -i i
 # ranges is an array which contains entries of the form x1,x2;y where x1 is
 # the starting pixel column on the screen and x2 is the final pixel column and
 # y is the offset from top of desktop (i.e. starting pixel row). This is output
-# for every monitor.
+# for every virtual column.
 ranges=$(echo "$monitor_info" | while read info; do
     # the output is: widthxheight+horizontal_offset+vertical_offset
     vertical_offset=${info/*+/}
