@@ -51,8 +51,9 @@ if [ "$delta" -ge "$cache_timeout" ]; then
     # echo "generating and tee" >> "$log"
     monitor_info=$( \
         xrandr -q \
-        | awk '/ connected [0-9]+x[0-9]+\+[0-9]+\+[0-9]+/{print $3}' \
-        | tee "$cache" \
+        | grep ' connected' \
+        | sed -e 's/.* \([0-9]\+x[0-9]\++[0-9]\++[0-9]\+\).*/\1/g' \
+        | tee "$cache"
         )
 else
     # echo "restoring" >> "$log"
