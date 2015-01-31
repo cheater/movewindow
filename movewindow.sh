@@ -173,7 +173,7 @@ for virtual_column in ${columns[@]}; do
     && [ "$horiz_center" -le "$range_right" ]; then
         # echo "found in $virtual_column" >> "$log" # dbg
         passed_current=0
-        # search through the sub-displays again to find one after the one we're
+        # search through the sub-displays again for one after the one we are
         # on currently; we also need to wrap around once.
         for virtual_column2 in ${columns_extended[@]}; do
             if [ "$virtual_column2" == "$virtual_column" ]; then
