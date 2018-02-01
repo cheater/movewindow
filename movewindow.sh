@@ -48,7 +48,7 @@ cache_modtime="$(stat -c %Y "$cache")"
 now="$(date +%s)"
 delta="$now - $cache_modtime"
 if [ "$delta" -ge "$cache_timeout" ]; then
-    # echo "generating and tee" >> "$log"
+    # echo "generating and tee" >> "$log" # dbg
     monitor_info="$( \
         xrandr -q \
         | grep ' connected [0-9]\+x[0-9]\++[0-9]\++[0-9]\+' \
@@ -56,7 +56,7 @@ if [ "$delta" -ge "$cache_timeout" ]; then
         | tee "$cache"
         )"
 else
-    # echo "restoring" >> "$log"
+    # echo "restoring" >> "$log" # dbg
     monitor_info="$(cat "$cache")"
     touch "$cache" # If you're using this program, it probably means
     # that you aren't messing around with monitor connections or settings,
@@ -109,6 +109,7 @@ declare -i i
 # is 1 if the virtual column takes up the whole physical screen or 0 otherwise.
 # This is output for every virtual column.
 columns="$(echo "$monitor_info" | while IFS= read -r info; do
+    # echo info is "$info" >> "$log" # dbg
     # the output is: widthxheight+horizontal_offset+vertical_offset
     vertical_offset=${info/*+/}
     width=${info/x*/}
@@ -121,6 +122,7 @@ columns="$(echo "$monitor_info" | while IFS= read -r info; do
     # is x1,x2;y. It is missing information on correspondence of virtual columns
     # to physical monitors, since everything we echo here is a physical monitor.
     done | while read range_and_offset; do
+        # echo range_and_offset is: "$range_and_offset" >> "$log" # dbg
         range=${range_and_offset%%;*}
         range_left=${range%%,*}
         range_right=${range##*,}
@@ -154,7 +156,7 @@ columns="$(echo "$monitor_info" | while IFS= read -r info; do
             done
         done)"
 
-# echo ${columns[@]} >> "$log" # dbg
+# echo columns are: ${columns[@]} >> "$log" # dbg
 # we need the columns plus one more, so if our window is at the last column,
 # it can jump to the first column. So we tack a copy of the first column onto
 # the end of the list/array/whatever bash has.
@@ -166,7 +168,7 @@ columns_extended="$(
 # search through the sub-displays to find the one we're on currently.
 for virtual_column in ${columns[@]}; do
     range=${virtual_column%%;*}
-    # echo $range >> "$log" # dbg
+    # echo $range >> "range: $log" # dbg
     range_left=${range%%,*}
     range_right=${range##*,}
     if [ "$range_left" -le "$horiz_center" ]\
@@ -198,7 +200,7 @@ for virtual_column in ${columns[@]}; do
                 # do note, SCREEN has nothing to do with the monitor the window
                 # is being displayed on.
                 # dbg
-                # xdotool getactivewindow getwindowgeometry --shell >> "$log"
+                # (echo 'xdotool output: '; xdotool getactivewindow getwindowgeometry --shell) >> "$log" # dbg
 
                 y_and_wholescreen=${virtual_column2#*;}
                 wholescreen=${y_and_wholescreen#*;}
