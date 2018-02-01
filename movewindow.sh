@@ -66,9 +66,9 @@ else
 wmctrl -r :ACTIVE: -b remove,maximized_horz
 wmctrl -r :ACTIVE: -b remove,maximized_vert
 
-# get the center of the window.
-# the above outputs something like:
+# Get the center of the window.
 eval "$(xdotool getactivewindow getwindowgeometry --shell)"
+# The above outputs something like:
 # WINDOW=70385876
 # X=593
 # Y=190
@@ -76,8 +76,9 @@ eval "$(xdotool getactivewindow getwindowgeometry --shell)"
 # HEIGHT=422
 # SCREEN=0
 #
-# do note, SCREEN has nothing to do with the monitor the window is being
-# displayed on.
+# Do note, SCREEN has nothing to do with the monitor the window is being
+# displayed on. It is the X11 "screen", which is a concept defined in the
+# nomenclature of X11.
 
 declare -i window_left # left border
 window_left="$X"
@@ -103,11 +104,12 @@ declare -i part
 declare -i start_
 declare -i end
 declare -i i
-# columns is an array which contains entries of the form x1,x2;y;f where x1 is
-# the starting pixel column on the screen and x2 is the final pixel column and
-# y is the offset from top of desktop (i.e. starting pixel row) and finally f
-# is 1 if the virtual column takes up the whole physical screen or 0 otherwise.
-# This is output for every virtual column.
+# columns is an array which contains entries of the form x1,x2;y;f where x1
+# is the starting pixel column on the screen and x2 is the final pixel
+# column, y is the offset from top of desktop (i.e. starting pixel row), and
+# finally f is 1 if the virtual column takes up the whole physical screen or
+# 0 otherwise.
+# This is put out for every virtual column.
 columns="$(echo "$monitor_info" | while IFS= read -r info; do
     # echo info is "$info" >> "$log" # dbg
     # the output is: widthxheight+horizontal_offset+vertical_offset
@@ -118,9 +120,10 @@ columns="$(echo "$monitor_info" | while IFS= read -r info; do
     left="$horiz_offset"
     right="$left + $width"
     echo "$left,$right;$vertical_offset" # we are echoing the dimensions of
-    # monitors; not virtual columns that we will move the panels to. The format
-    # is x1,x2;y. It is missing information on correspondence of virtual columns
-    # to physical monitors, since everything we echo here is a physical monitor.
+    # monitors; not virtual columns that we will move the panels to. The
+    # format is x1,x2;y. It is missing information on correspondence of
+    # virtual columns to physical monitors, since everything we echo here is
+    # a physical monitor.
     done | while IFS= read -r range_and_offset; do
         # echo range_and_offset is: "$range_and_offset" >> "$log" # dbg
         range=${range_and_offset%%;*}
@@ -145,9 +148,9 @@ columns="$(echo "$monitor_info" | while IFS= read -r info; do
         for ((i=1; i<=$parts; i++)); do
             start_="$range_left+($i-1)*$part"
             if (($i == $parts)); then
-                # the last submonitor might have one pixel column missing
-                # because we are dividing in the integers, so let's account for
-                # the division remainder here.
+                # The last submonitor might have one pixel column missing
+                # because we are dividing in the integers, so let us account
+                # for the division remainder here.
                 end="$range_right"
             else
                 end="$range_left+$i*$part"
