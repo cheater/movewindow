@@ -44,21 +44,21 @@ cache_timeout=4
 cache="$HOME/.movewindow_cache"
 
 declare -i delta
-cache_modtime=$(stat -c %Y "$cache")
-now=$(date +%s)
+cache_modtime="$(stat -c %Y "$cache")"
+now="$(date +%s)"
 delta="$now - $cache_modtime"
 if [ "$delta" -ge "$cache_timeout" ]; then
     # echo "generating and tee" >> "$log"
-    monitor_info=$( \
+    monitor_info="$( \
         xrandr -q \
         | grep ' connected [0-9]\+x[0-9]\++[0-9]\++[0-9]\+' \
         | sed -e 's/.* \([0-9]\+x[0-9]\++[0-9]\++[0-9]\+\).*/\1/g' \
         | tee "$cache"
-        )
+        )"
 else
     # echo "restoring" >> "$log"
-    monitor_info=$(cat "$cache")
-    touch "$cache" # if you're using this program, it probably means
+    monitor_info="$(cat "$cache")"
+    touch "$cache" # If you're using this program, it probably means
     # that you aren't messing around with monitor connections or settings,
     # so let's re-validate the cache.
     fi
@@ -67,8 +67,8 @@ wmctrl -r :ACTIVE: -b remove,maximized_horz
 wmctrl -r :ACTIVE: -b remove,maximized_vert
 
 # get the center of the window.
-eval $(xdotool getactivewindow getwindowgeometry --shell)
 # the above outputs something like:
+eval "$(xdotool getactivewindow getwindowgeometry --shell)"
 # WINDOW=70385876
 # X=593
 # Y=190
@@ -108,7 +108,7 @@ declare -i i
 # y is the offset from top of desktop (i.e. starting pixel row) and finally f
 # is 1 if the virtual column takes up the whole physical screen or 0 otherwise.
 # This is output for every virtual column.
-columns=$(echo "$monitor_info" | while read info; do
+columns="$(echo "$monitor_info" | while IFS= read -r info; do
     # the output is: widthxheight+horizontal_offset+vertical_offset
     vertical_offset=${info/*+/}
     width=${info/x*/}
@@ -152,16 +152,16 @@ columns=$(echo "$monitor_info" | while read info; do
                 fi
             echo "$start_,$end;$offset;0"
             done
-        done)
+        done)"
 
 # echo ${columns[@]} >> "$log" # dbg
 # we need the columns plus one more, so if our window is at the last column,
 # it can jump to the first column. So we tack a copy of the first column onto
 # the end of the list/array/whatever bash has.
-columns_extended=$(
+columns_extended="$(
     for r in ${columns[@]}; do echo "$r"; done
     for r in ${columns[@]}; do echo "$r"; break; done
-    )
+    )"
 
 # search through the sub-displays to find the one we're on currently.
 for virtual_column in ${columns[@]}; do
@@ -186,7 +186,7 @@ for virtual_column in ${columns[@]}; do
                 range2_left=${range2%%,*}
                 range2_right=${range2##*,}
                 # echo "found not in $virtual_column2" >> "$log" # dbg
-                eval $(xdotool getactivewindow getwindowgeometry --shell)
+                eval "$(xdotool getactivewindow getwindowgeometry --shell)"
                 # the above outputs something like:
                 # WINDOW=70385876
                 # X=593
