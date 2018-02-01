@@ -51,7 +51,7 @@ if [ "$delta" -ge "$cache_timeout" ]; then
     # echo "generating and tee" >> "$log" # dbg
     monitor_info="$( \
         xrandr -q \
-        | grep ' connected [0-9]\+x[0-9]\++[0-9]\++[0-9]\+' \
+        | grep ' connected \(primary \|\)[0-9]\+x[0-9]\++[0-9]\++[0-9]\+' \
         | sed -e 's/.* \([0-9]\+x[0-9]\++[0-9]\++[0-9]\+\).*/\1/g' \
         | tee "$cache"
         )"
