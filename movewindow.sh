@@ -141,7 +141,7 @@ columns="$(echo "$monitor_info" | while IFS= read -r info; do
         # echo not skipping "$range_and_offset" >> "$log" # dbg
 
         parts="$width/$preferred_width" # $parts contains the amount of
-        # sub-monitors that will be created.
+        # sub-monitors (columns) that will be created.
         part="$width/$parts" # $part contains the number of pixel columns
         # which will form one sub-monitor. Note one pixel might be missing.
 
