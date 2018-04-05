@@ -145,9 +145,9 @@ columns="$(echo "$monitor_info" | while IFS= read -r info; do
         part="$width/$parts" # $part contains the number of pixel columns
         # which will form one sub-monitor. Note one pixel might be missing.
 
-        for ((i=1; i<=$parts; i++)); do
+        for ((i=1; i<=parts; i++)); do
             start_="$range_left+($i-1)*$part"
-            if (($i == $parts)); then
+            if ((i == parts)); then
                 # The last submonitor might have one pixel column missing
                 # because we are dividing in the integers, so let us account
                 # for the division remainder here.
