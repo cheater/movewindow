@@ -104,6 +104,7 @@ declare -i part
 declare -i start_
 declare -i end
 declare -i i
+declare -i j
 # columns is an array which contains entries of the form x1,x2;y;f where x1
 # is the starting pixel column on the screen and x2 is the final pixel
 # column, y is the offset from top of desktop (i.e. starting pixel row), and
@@ -146,16 +147,18 @@ columns="$(echo "$monitor_info" | while IFS= read -r info; do
         # which will form one sub-monitor. Note one pixel might be missing.
 
         for ((i=1; i<=parts; i++)); do
-            start_="$range_left+($i-1)*$part"
-            if ((i == parts)); then
-                # The last submonitor might have one pixel column missing
-                # because we are dividing in the integers, so let us account
-                # for the division remainder here.
-                end="$range_right"
-            else
-                end="$range_left+$i*$part"
-                fi
-            echo "$start_,$end;$offset;0"
+            for ((j=0; j<parts-1 && i+j<=parts; j++)); do
+                start_="$range_left+($i-1)*$part"
+                if ((i+j == parts)); then
+                    # The last submonitor might have one pixel column missing
+                    # because we are dividing in the integers, so let us
+                    # account for the division remainder here.
+                    end="$range_right"
+                else
+                    end="$range_left+($i+$j)*$part"
+                    fi
+                echo "$start_,$end;$offset;0"
+                done
             done
         done)"
 
