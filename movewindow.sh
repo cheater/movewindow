@@ -161,17 +161,6 @@ mapfile -t panels < <(echo "$monitor_info" | while IFS= read -r info; do
     done)
 # echo panels are: ${panels[@]} >> "$log" # dbg
 
-# we need the panels plus one more, so if our window is at the last panel,
-# it can jump to the first panel. So we tack a copy of the first panel onto
-# the end of the list/array/whatever bash has.
-#
-# awk '!x[$0]++' is like uniq but doesn't require sorting.
-declare -a panels_extended
-mapfile -t panels_extended < <(
-    for r in "${panels[@]}"; do echo "$r"; done | awk '!x[$0]++'
-    for r in "${panels[@]}"; do echo "$r"; break; done
-    )
-
 eval "$(xdotool getactivewindow getwindowgeometry --shell)"
 # The above outputs something like:
 # WINDOW=70385876
@@ -254,10 +243,23 @@ closest_panel_idx="$(for (( i=0; i<$panels_len; i++ )); do
         fi
     done)"
 
+
 # Jump to next panel
 
 declare -i next_panel_idx
 next_panel_idx="$closest_panel_idx+1"
+
+# we need the panels plus one more, so if our window is at the last panel,
+# it can jump to the first panel. So we tack a copy of the first panel onto
+# the end of the list/array/whatever bash has.
+#
+# awk '!x[$0]++' is like uniq but doesn't require sorting.
+declare -a panels_extended
+mapfile -t panels_extended < <(
+    for r in "${panels[@]}"; do echo "$r"; done | awk '!x[$0]++'
+    for r in "${panels[@]}"; do echo "$r"; break; done
+    )
+
 panel="${panels_extended[$next_panel_idx]}"
 IFS=';,' read -r p_left p_right p_height p_top fullscreen <<< "$panel"
 eval "$(xdotool getactivewindow getwindowgeometry --shell)"
