@@ -158,7 +158,9 @@ mapfile -t panels < <(echo "$monitor_info" | while IFS= read -r info; do
                 fi
             done
         done
-    done)
+    # awk '!x[$0]++' is like uniq but doesn't require sorting.
+    done | awk '!x[$0]++')
+
 # echo panels are: ${panels[@]} >> "$log" # dbg
 
 
@@ -260,11 +262,9 @@ next_panel_idx="$closest_panel_idx+1"
 # we need the panels plus one more, so if our window is at the last panel,
 # it can jump to the first panel. So we tack a copy of the first panel onto
 # the end of the list/array/whatever bash has.
-#
-# awk '!x[$0]++' is like uniq but doesn't require sorting.
 declare -a panels_extended
 mapfile -t panels_extended < <(
-    for r in "${panels[@]}"; do echo "$r"; done | awk '!x[$0]++'
+    for r in "${panels[@]}"; do echo "$r"; done
     for r in "${panels[@]}"; do echo "$r"; break; done
     )
 
