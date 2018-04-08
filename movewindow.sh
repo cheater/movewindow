@@ -82,7 +82,7 @@ monitor_num=0
 declare -i vertical_offset
 declare -i width
 declare -i height
-declare -i horiz_offset
+declare -i horizontal_offset
 declare -i left
 declare -i right
 declare -i range_left
@@ -105,79 +105,58 @@ declare -i parts_with_overflow
 declare -a columns
 mapfile -t columns < <(echo "$monitor_info" | while IFS= read -r info; do
     # the output is: widthxheight+horizontal_offset+vertical_offset
-    vertical_offset=${info/*+/}
-    width=${info/x*/}
-    height_and_offset=${info##*x}
-    height=${height_and_offset%%+*}
-    offsets=${info#*+}
-    horiz_offset=${offsets/+*/}
-    left="$horiz_offset"
+    IFS='x+' read -r width height horizontal_offset vertical_offset <<< "$info"
+    left="$horizontal_offset"
     right="$left + $width"
-    echo "$left,$right,$height;$vertical_offset" # we are echoing the dimensions
-    # of physical monitors as reported by X; not virtual columns that we will
-    # move the panels to. The format is x1,x2,h;y. It is missing information on
-    # correspondence of virtual columns to physical monitors, since everything
-    # we echo here is a physical monitor.
-        # echo range_and_offset is: "$range_and_offset" >> "$log" # dbg
-    done | while IFS= read -r range_and_height_and_offset; do
-        range=${range_and_height_and_offset%%;*}
-        range_left=${range%%,*}
-        range_right_and_height=${range#*,}
-        range_right=${range_right_and_height%,*}
-        height=${range_right_and_height##*,}
-        offset=${range_and_height_and_offset##*;}
-        width="$range_right-$range_left"
+    width="$right-$left"
 
-        # echo width is "$width" >> "$log" # dbg
-        if [ "$width" -le "$max_width" ]; then
-            # echo skipping "$range_and_height_and_offset" >> "$log" # dbg
-            echo "$range_and_height_and_offset;1"
-            continue
-            fi
-        # echo not skipping "$range_and_height_and_offset" >> "$log" # dbg
+    if [ "$width" -le "$max_width" ]; then
+        echo "$range_and_height_and_offset;1"
+        continue
+        fi
 
-        parts="$width/$preferred_width" # $parts contains the amount of
-        # sub-monitors (columns) of preferred size that will be created. There
-        # may also be an overflow sub-monitor that will be less than preferred
-        # size.
-        overflow=false
-        overflow_size="$width-$parts*$preferred_width"
-        if [ "$overflow_size" -ge "$min_width" ]; then
-            overflow=true
-            fi
+    parts="$width/$preferred_width" # $parts contains the amount of
+    # sub-monitors (columns) of preferred size that will be created. There
+    # may also be an overflow sub-monitor that will be less than preferred
+    # size.
+    overflow=false
+    overflow_size="$width-$parts*$preferred_width"
+    if [ "$overflow_size" -ge "$min_width" ]; then
+        overflow=true
+        fi
 
-        parts_with_overflow="$parts" # $parts_with_overflow contains the amount
-        # of sub-monitors we will have with possibly an overflow sub-monitor
-        # that's smaller than the preferred size but still larger than the min
-        # size.
+    parts_with_overflow="$parts" # $parts_with_overflow contains the amount
+    # of sub-monitors we will have with possibly an overflow sub-monitor
+    # that's smaller than the preferred size but still larger than the min
+    # size.
 
-        part="$width/$parts" # $part contains the number of pixel columns
-        # which will form one sub-monitor. Note one pixel might be missing.
+    part="$width/$parts" # $part contains the number of pixel columns
+    # which will form one sub-monitor. Note one pixel might be missing.
 
-        if $overflow; then
-            part="$preferred_width"
-            parts_with_overflow="$parts+1"
-            fi
+    if $overflow; then
+        part="$preferred_width"
+        parts_with_overflow="$parts+1"
+        fi
 
-        for ((j=0; j<=parts_with_overflow; j++)); do
-            for ((i=1; i<=parts_with_overflow; i++)); do
-                if ((j<parts_with_overflow-1 && i+j<=parts_with_overflow)); then
-                    echo i is: "$i" >> "$log" # dbg
-                    start_="$range_left+($i-1)*$part"
-                    if ((i+j == parts_with_overflow)); then
-                        # The last submonitor might have one pixel column
-                        # missing because we are dividing in the integers, so
-                        # let us account for the division remainder here.
-                        end="$range_right"
-                    else
-                        end="$range_left+($i+$j)*$part"
-                        fi
-                    echo "$start_,$end,$height;$offset;0"
+    for ((j=0; j<=parts_with_overflow; j++)); do
+        for ((i=1; i<=parts_with_overflow; i++)); do
+            if ((j<parts_with_overflow-1 && i+j<=parts_with_overflow)); then
+                start_="$left+($i-1)*$part"
+                if ((i+j == parts_with_overflow)); then
+                    # The last submonitor might have one pixel column
+                    # missing because we are dividing in the integers, so
+                    # let us account for the division remainder here.
+                    end="$right"
+                else
+                    end="$left+($i+$j)*$part"
                     fi
-                done
+                wholescreen=0
+                echo "$start_,$end,$height;$vertical_offset;$wholescreen"
+                fi
             done
-        done)"
-        done)
+        done
+    done)
+
 
 # echo columns are: ${columns[@]} >> "$log" # dbg
 # we need the columns plus one more, so if our window is at the last column,
@@ -209,11 +188,8 @@ window_area="$WIDTH*$HEIGHT"
 declare -i column_area
 declare -a columns_area_diff
 mapfile -t columns_area_diff < <(for virtual_column in ${columns[@]}; do
-    range=${virtual_column%%;*}
-    range_left=${range%%,*}
-    range_right_and_height=${range#*,}
-    range_right=${range_right_and_height%%,*}
-    range_height=${range_right_and_height#*,}
+    echo "virtual_column is: $virtual_column" >> "$log" # dbg
+    IFS=';,' read -r range_left range_right range_height range_vert_offset wholescreen <<< "$virtual_column"
     column_area="($range_right-$range_left)*$range_height"
     d="$window_area-$column_area"
     echo "sqrt(sqrt(($d)^2))" | bc
@@ -246,15 +222,9 @@ declare -i column_center_horiz
 declare -i column_center_vert
 declare -a columns_center_diff
 mapfile -t columns_center_diff < <(for virtual_column in "${columns[@]}"; do
-    range=${virtual_column%%;*}
-    range_left=${range%%,*}
-    range_right_and_height=${range#*,}
-    range_right=${range_right_and_height%%,*}
-    range_height=${range_right_and_height#*,}
-    range_offset_and_maximized=${rangei#*;}
-    range_offset=${range_offset_and_maximized%%;*}
+    IFS=';,' read -r range_left range_right range_height range_vert_offset wholescreen <<< "$virtual_column"
     let "column_center_horiz=($range_left+$range_right)/2" # integer division
-    let "column_center_vert=$range_offset+$range_height/2" # integer division
+    let "column_center_vert=$range_vert_offset+$range_height/2" # integer division
     diff_horiz="$column_center_horiz-$window_center_horiz"
     diff_vert="$column_center_vert-$window_center_vert"
     echo "sqrt(($diff_horiz)^2+($diff_vert)^2)" | bc
@@ -288,12 +258,8 @@ closest_column_idx="$(for (( i=0; i<=$columns_len; i++ )); do
 
 declare -i closest_column_idx_next
 closest_column_idx_next="$closest_column_idx+1"
-virtual_column2="${columns_extended[$closest_column_idx_next]}"
-range2=${virtual_column2%%;*}
-range2_left=${range2%%,*}
-range2_right_and_height=${range2#*,}
-range2_right=${range2_right_and_height%%,*}
-range2_height=${range2_right_and_height#*,}
+virtual_column="${columns_extended[$closest_column_idx_next]}"
+IFS=';,' read -r range_left range_right range_height range_vert_offset wholescreen <<< "$virtual_column"
 eval "$(xdotool getactivewindow getwindowgeometry --shell)"
 # the above outputs something like:
 # WINDOW=70385876
@@ -308,17 +274,9 @@ eval "$(xdotool getactivewindow getwindowgeometry --shell)"
 # dbg
 # (echo 'xdotool output: '; xdotool getactivewindow getwindowgeometry --shell) >> "$log" # dbg
 
-y_and_wholescreen=${virtual_column2#*;}
-wholescreen=${y_and_wholescreen#*;}
 gravity=0
-x="$range2_left"
-y=${y_and_wholescreen%%;*}
-width="$range2_right-$range2_left-2*$border" # has something to
-# do with 884/882 bug
-w="$width"
-h="$range2_height"
-# echo "$gravity,$x,$y,$w,$h" >> "$log" # dbg
-wmctrl -r :ACTIVE: -e "$gravity,$x,$y,$w,$h"
+width="$range_right-$range_left-2*$border" # has something to do with 884/882 bug
+wmctrl -r :ACTIVE: -e "$gravity,$range_left,$range_vert_offset,$width,$range_height"
 
 if [ "$wholescreen" -eq "1" ]; then
     wmctrl -r :ACTIVE: -b add,maximized_vert,maximized_horz
