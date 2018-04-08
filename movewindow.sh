@@ -118,7 +118,8 @@ mapfile -t panels < <(echo "$monitor_info" | while IFS= read -r info; do
     fullscreen=0
     # echo width is "$width" >> "$log" # dbg
     if [ "$width" -le "$max_width" ]; then
-        fullscreen=1 # FIXME: fix this case, part of the rest of the logic should be skipped!
+        fullscreen=1 # FIXME: fix this case, part of the rest of the logic
+        # should be skipped!
         fi
 
     parts="$width/$preferred_width" # $parts contains the amount of
@@ -256,9 +257,6 @@ closest_panel_idx="$(for (( i=0; i<$panels_len; i++ )); do
 # Jump to next panel. Now that we know which panel we're on, let's go to the
 # next one.
 
-declare -i next_panel_idx
-next_panel_idx="$closest_panel_idx+1"
-
 # we need the panels plus one more, so if our window is at the last panel,
 # it can jump to the first panel. So we tack a copy of the first panel onto
 # the end of the list/array/whatever bash has.
@@ -266,7 +264,7 @@ declare -a panels_extended
 panels_extended=("${panels[@]}")
 panels_extended+=("${panels[0]}")
 
-panel="${panels_extended[next_panel_idx]}"
+panel="${panels_extended[closest_panel_idx+1]}"
 IFS=';,' read -r p_left p_right p_height p_top fullscreen <<< "$panel"
 eval "$(xdotool getactivewindow getwindowgeometry --shell)"
 # the above outputs something like:
