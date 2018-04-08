@@ -102,6 +102,7 @@ monitor_num=0
 
 declare -i vertical_offset
 declare -i width
+declare -i height
 declare -i horiz_offset
 declare -i left
 declare -i right
@@ -126,30 +127,34 @@ columns="$(echo "$monitor_info" | while IFS= read -r info; do
     # the output is: widthxheight+horizontal_offset+vertical_offset
     vertical_offset=${info/*+/}
     width=${info/x*/}
+    height_and_offset=${info##*x}
+    height=${height_and_offset%%+*}
     offsets=${info#*+}
     horiz_offset=${offsets/+*/}
     left="$horiz_offset"
     right="$left + $width"
-    echo "$left,$right;$vertical_offset" # we are echoing the dimensions of
-    # physical monitors as reported by X; not virtual columns that we will move
-    # the panels to. The format is x1,x2;y. It is missing information on
+    echo "$left,$right,$height;$vertical_offset" # we are echoing the dimensions
+    # of physical monitors as reported by X; not virtual columns that we will
+    # move the panels to. The format is x1,x2,h;y. It is missing information on
     # correspondence of virtual columns to physical monitors, since everything
     # we echo here is a physical monitor.
-    done | while IFS= read -r range_and_offset; do
         # echo range_and_offset is: "$range_and_offset" >> "$log" # dbg
-        range=${range_and_offset%%;*}
+    done | while IFS= read -r range_and_height_and_offset; do
+        range=${range_and_height_and_offset%%;*}
         range_left=${range%%,*}
-        range_right=${range##*,}
-        offset=${range_and_offset##*;}
+        range_right_and_height=${range#*,}
+        range_right=${range_right_and_height%,*}
+        height=${range_right_and_height##*,}
+        offset=${range_and_height_and_offset##*;}
         width="$range_right-$range_left"
 
         # echo width is "$width" >> "$log" # dbg
         if [ "$width" -le "$max_width" ]; then
-            # echo skipping "$range_and_offset" >> "$log" # dbg
-            echo "$range_and_offset;1"
+            # echo skipping "$range_and_height_and_offset" >> "$log" # dbg
+            echo "$range_and_height_and_offset;1"
             continue
             fi
-        # echo not skipping "$range_and_offset" >> "$log" # dbg
+        # echo not skipping "$range_and_height_and_offset" >> "$log" # dbg
 
         parts="$width/$preferred_width" # $parts contains the amount of
         # sub-monitors (columns) of preferred size that will be created. There
@@ -187,7 +192,7 @@ columns="$(echo "$monitor_info" | while IFS= read -r info; do
                     else
                         end="$range_left+($i+$j)*$part"
                         fi
-                    echo "$start_,$end;$offset;0"
+                    echo "$start_,$end,$height;$offset;0"
                     fi
                 done
             done
@@ -207,7 +212,9 @@ for virtual_column in ${columns[@]}; do
     range=${virtual_column%%;*}
     # echo $range >> "range: $log" # dbg
     range_left=${range%%,*}
-    range_right=${range##*,}
+    range_right_and_height=${range#*,}
+    range_right=${range_right_and_height%%,*}
+    range_height=${range_right_and_height#*,}
     if [ "$range_left" -le "$horiz_center" ]\
     && [ "$horiz_center" -le "$range_right" ]; then
         # echo "found in $virtual_column" >> "$log" # dbg
@@ -223,8 +230,10 @@ for virtual_column in ${columns[@]}; do
             && [ "$virtual_column2" != "$virtual_column" ]; then
                 range2=${virtual_column2%%;*}
                 range2_left=${range2%%,*}
-                range2_right=${range2##*,}
                 # echo "found not in $virtual_column2" >> "$log" # dbg
+                range2_right_and_height=${range2#*,}
+                range2_right=${range2_right_and_height%%,*}
+                range2_height=${range2_right_and_height#*,}
                 eval "$(xdotool getactivewindow getwindowgeometry --shell)"
                 # the above outputs something like:
                 # WINDOW=70385876
@@ -244,7 +253,8 @@ for virtual_column in ${columns[@]}; do
                 gravity=0
                 x="$range2_left"
                 y=${y_and_wholescreen%%;*}
-                width="$range2_right-$range2_left-2*$border"
+                width="$range2_right-$range2_left-2*$border" # has something to
+                # do with 884/882 bug
                 w="$width"
                 h="$HEIGHT"
                 # echo "$gravity,$x,$y,$w,$h" >> "$log" # dbg
