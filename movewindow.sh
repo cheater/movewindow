@@ -266,7 +266,7 @@ columns_amt=${#columns[@]}
 columns_len="$columns_amt-1"
 
 declare -a columns_score
-for i in $(seq 0 $columns_len); do
+for (( i=0; i<=columns_len; i++ )); do
     a=${columns_area_diff[$i]}
     c=${columns_center_diff[$i]}
     columns_score[$i]=$(echo "sqrt(($a)^2+($c)^2)" | bc)
@@ -278,7 +278,7 @@ for n in ${columns_score[@]}; do
     if [ "$n" -lt "$columns_score_min" ]; then columns_score_min=$n; fi
     done
 
-closest_column_idx="$(for i in $(seq 0 $columns_len); do
+closest_column_idx="$(for (( i=0; i<=$columns_len; i++ )); do
     if [ "$columns_score_min" -eq "${columns_score[$i]}" ]; then
         echo "$i"
         break
