@@ -173,18 +173,21 @@ columns="$(echo "$monitor_info" | while IFS= read -r info; do
             parts_with_overflow="$parts+1"
             fi
 
-        for ((i=1; i<=parts_with_overflow; i++)); do
-            for ((j=0; j<parts_with_overflow-1 && i+j<=parts_with_overflow; j++)); do
-                start_="$range_left+($i-1)*$part"
-                if ((i+j == parts_with_overflow)); then
-                    # The last submonitor might have one pixel column missing
-                    # because we are dividing in the integers, so let us
-                    # account for the division remainder here.
-                    end="$range_right"
-                else
-                    end="$range_left+($i+$j)*$part"
+        for ((j=0; j<=parts_with_overflow; j++)); do
+            for ((i=1; i<=parts_with_overflow; i++)); do
+                if ((j<parts_with_overflow-1 && i+j<=parts_with_overflow)); then
+                    echo i is: "$i" >> "$log" # dbg
+                    start_="$range_left+($i-1)*$part"
+                    if ((i+j == parts_with_overflow)); then
+                        # The last submonitor might have one pixel column
+                        # missing because we are dividing in the integers, so
+                        # let us account for the division remainder here.
+                        end="$range_right"
+                    else
+                        end="$range_left+($i+$j)*$part"
+                        fi
+                    echo "$start_,$end;$offset;0"
                     fi
-                echo "$start_,$end;$offset;0"
                 done
             done
         done)"
