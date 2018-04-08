@@ -227,11 +227,10 @@ mapfile -t panels_center_diff < <(for panel in "${panels[@]}"; do
     done)
 
 declare -i panels_len
-panels_amt=${#panels[@]} # FIXME: remove this variable
-panels_len="$panels_amt-1"
+panels_len=${#panels[@]}
 
 declare -a panels_score
-for (( i=0; i<=panels_len; i++ )); do
+for (( i=0; i<panels_len; i++ )); do
     a=${panels_area_diff[$i]}
     c=${panels_center_diff[$i]}
     panels_score[$i]=$(echo "sqrt(($a)^2+($c)^2)" | bc)
@@ -243,7 +242,7 @@ for n in ${panels_score[@]}; do
     if [ "$n" -lt "$panels_score_min" ]; then panels_score_min=$n; fi
     done
 
-closest_panel_idx="$(for (( i=0; i<=$panels_len; i++ )); do
+closest_panel_idx="$(for (( i=0; i<$panels_len; i++ )); do
     if [ "$panels_score_min" -eq "${panels_score[$i]}" ]; then
         echo "$i"
         break
