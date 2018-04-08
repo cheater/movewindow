@@ -27,15 +27,23 @@
 # log="/tmp/dbglog" # dbg
 # echo "-----------" >> "$log" # dbg
 
-preferred_width=800
+# SETTINGS:
+
+min_width=750
+preferred_width=884 # bug: why does this need to be 884 for the windows to
+# become 882 pixels wide?
 max_width=1500
+
+
+
+
 
 # If your theme uses borders, set the border thickness here. This is important
 # so that windows line up properly.
 #
 # Idea: maybe there's a way to find out about this programmatically.
 
-border=1
+border=1 # has something to do with 884/882 bug
 
 # Now we're using cache for the expensive xrandr readout, so it should only
 # happen once in a while. Set the cache timeout here, in seconds.
@@ -105,6 +113,8 @@ declare -i start_
 declare -i end
 declare -i i
 declare -i j
+declare -i overflow_size
+declare -i parts_with_overflow
 # columns is an array which contains entries of the form x1,x2;y;f where x1
 # is the starting pixel column on the screen and x2 is the final pixel
 # column, y is the offset from top of desktop (i.e. starting pixel row), and
@@ -142,14 +152,31 @@ columns="$(echo "$monitor_info" | while IFS= read -r info; do
         # echo not skipping "$range_and_offset" >> "$log" # dbg
 
         parts="$width/$preferred_width" # $parts contains the amount of
-        # sub-monitors (columns) that will be created.
+        # sub-monitors (columns) of preferred size that will be created. There
+        # may also be an overflow sub-monitor that will be less than preferred
+        # size.
+        overflow=false
+        overflow_size="$width-$parts*$preferred_width"
+        if [ "$overflow_size" -ge "$min_width" ]; then
+            overflow=true
+            fi
+        parts_with_overflow="$parts" # $parts_with_overflow contains the amount
+        # of sub-monitors we will have with possibly an overflow sub-monitor
+        # that's smaller than the preferred size but still larger than the min
+        # size.
+
         part="$width/$parts" # $part contains the number of pixel columns
         # which will form one sub-monitor. Note one pixel might be missing.
 
-        for ((i=1; i<=parts; i++)); do
-            for ((j=0; j<parts-1 && i+j<=parts; j++)); do
+        if $overflow; then
+            part="$preferred_width"
+            parts_with_overflow="$parts+1"
+            fi
+
+        for ((i=1; i<=parts_with_overflow; i++)); do
+            for ((j=0; j<parts_with_overflow-1 && i+j<=parts_with_overflow; j++)); do
                 start_="$range_left+($i-1)*$part"
-                if ((i+j == parts)); then
+                if ((i+j == parts_with_overflow)); then
                     # The last submonitor might have one pixel column missing
                     # because we are dividing in the integers, so let us
                     # account for the division remainder here.
