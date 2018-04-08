@@ -256,14 +256,12 @@ for virtual_column in ${columns[@]}; do
                 width="$range2_right-$range2_left-2*$border" # has something to
                 # do with 884/882 bug
                 w="$width"
-                h="$HEIGHT"
+                h="$range2_height"
                 # echo "$gravity,$x,$y,$w,$h" >> "$log" # dbg
                 wmctrl -r :ACTIVE: -e "$gravity,$x,$y,$w,$h"
 
                 if [ "$wholescreen" -eq "1" ]; then
                     wmctrl -r :ACTIVE: -b add,maximized_vert,maximized_horz
-                else
-                    wmctrl -r :ACTIVE: -b add,maximized_vert
                     fi
 
                 break
