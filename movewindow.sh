@@ -113,7 +113,6 @@ mapfile -t panels < <(echo "$monitor_info" | while IFS= read -r info; do
     IFS='x+' read -r width height horizontal_offset vertical_offset <<< "$info"
     left="$horizontal_offset"
     right="$left + $width"
-    width="$right-$left"
 
     fullscreen=0
     # echo width is "$width" >> "$log" # dbg
