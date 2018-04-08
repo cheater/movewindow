@@ -251,9 +251,9 @@ closest_panel_idx="$(for (( i=0; i<$panels_len; i++ )); do
 
 # Jump to next panel
 
-declare -i closest_panel_idx_next # FIXME: rename me
-closest_panel_idx_next="$closest_panel_idx+1"
-panel="${panels_extended[$closest_panel_idx_next]}"
+declare -i next_panel_idx
+next_panel_idx="$closest_panel_idx+1"
+panel="${panels_extended[$next_panel_idx]}"
 IFS=';,' read -r p_left p_right p_height p_vert_offset wholescreen <<< "$panel"
 eval "$(xdotool getactivewindow getwindowgeometry --shell)"
 # the above outputs something like:
