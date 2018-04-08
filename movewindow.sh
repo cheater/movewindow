@@ -114,8 +114,8 @@ mapfile -t panels < <(echo "$monitor_info" | while IFS= read -r info; do
     left="$horizontal_offset"
     right="$left + $width"
 
-    fullscreen=0
     # echo width is "$width" >> "$log" # dbg
+    fullscreen=0
     if [ "$width" -le "$max_width" ]; then
         fullscreen=1 # FIXME: fix this case, part of the rest of the logic
         # should be skipped!
