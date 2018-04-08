@@ -95,13 +95,12 @@ declare -i i
 declare -i j
 declare -i overflow_size
 declare -i parts_with_overflow
-# columns is an array which contains entries of the form x1,x2;y;f where x1
-# is the starting pixel column on the screen and x2 is the final pixel
-# column, y is the offset from top of desktop (i.e. starting pixel row), and
-# finally f is 1 if the virtual column takes up the whole physical screen or
-# 0 otherwise.
-# This is put out for every virtual column.
-    # echo info is "$info" >> "$log" # dbg
+# columns is an array which contains entries of the form x1,x2,h;y;f where x1
+# is the starting pixel column on the screen and x2 is the final pixel column,
+# h is the height of the sub-display, y is the offset from top of desktop (i.e.
+# starting pixel row), and finally f is 1 if the sub-display takes up the whole
+# physical screen or 0 otherwise.
+# This is output for every virtual column.
 
 declare -a columns
 mapfile -t columns < <(echo "$monitor_info" | while IFS= read -r info; do
