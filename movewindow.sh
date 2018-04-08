@@ -142,11 +142,11 @@ mapfile -t panels < <(echo "$monitor_info" | while IFS= read -r info; do
         parts_with_overflow="$parts+1"
         fi
 
-    for ((j=0; j<=parts_with_overflow; j++)); do
-        for ((i=1; i<=parts_with_overflow; i++)); do
-            if ((j<parts_with_overflow-1 && i+j<=parts_with_overflow)); then
+    for (( j=0; j<=parts_with_overflow; j++ )); do
+        for (( i=1; i<=parts_with_overflow; i++ )); do
+            if (( j<parts_with_overflow-1 && i+j<=parts_with_overflow )); then
                 start_="$left+($i-1)*$part"
-                if ((i+j == parts_with_overflow)); then
+                if (( i+j == parts_with_overflow )); then
                     # The last panel might have one pixel column missing
                     # because we are dividing in the integers, so let us
                     # account for the division remainder here.
@@ -263,10 +263,8 @@ next_panel_idx="$closest_panel_idx+1"
 # it can jump to the first panel. So we tack a copy of the first panel onto
 # the end of the list/array/whatever bash has.
 declare -a panels_extended
-mapfile -t panels_extended < <(
-    for r in "${panels[@]}"; do echo "$r"; done
-    for r in "${panels[@]}"; do echo "$r"; break; done
-    )
+panels_extended=("${panels[@]}")
+panels_extended+=("${panels[0]}")
 
 panel="${panels_extended[$next_panel_idx]}"
 IFS=';,' read -r p_left p_right p_height p_top fullscreen <<< "$panel"
