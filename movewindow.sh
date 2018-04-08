@@ -110,10 +110,10 @@ mapfile -t panels < <(echo "$monitor_info" | while IFS= read -r info; do
     right="$left + $width"
     width="$right-$left"
 
-    wholescreen=0
+    fullscreen=0
     # echo width is "$width" >> "$log" # dbg
     if [ "$width" -le "$max_width" ]; then
-        wholescreen=1 # FIXME: fix this case, part of the rest of the logic should be skipped!
+        fullscreen=1 # FIXME: fix this case, part of the rest of the logic should be skipped!
         fi
 
     parts="$width/$preferred_width" # $parts contains the amount of
@@ -149,7 +149,7 @@ mapfile -t panels < <(echo "$monitor_info" | while IFS= read -r info; do
                 else
                     end="$left+($i+$j)*$part"
                     fi
-                echo "$start_,$end,$height;$vertical_offset;$wholescreen"
+                echo "$start_,$end,$height;$vertical_offset;$fullscreen"
                 fi
             done
         done
@@ -185,7 +185,7 @@ window_area="$WIDTH*$HEIGHT"
 declare -i panel_area
 declare -a panels_area_diff
 mapfile -t panels_area_diff < <(for panel in ${panels[@]}; do
-    IFS=';,' read -r p_left p_right p_height p_top wholescreen <<< "$panel"
+    IFS=';,' read -r p_left p_right p_height p_top fullscreen <<< "$panel"
     panel_area="($p_right-$p_left)*$p_height"
     d="$window_area-$panel_area"
     echo "sqrt(sqrt(($d)^2))" | bc
@@ -218,7 +218,7 @@ declare -i panel_center_horiz
 declare -i panel_center_vert
 declare -a panels_center_diff
 mapfile -t panels_center_diff < <(for panel in "${panels[@]}"; do
-    IFS=';,' read -r p_left p_right p_height p_top wholescreen <<< "$panel"
+    IFS=';,' read -r p_left p_right p_height p_top fullscreen <<< "$panel"
     let "panel_center_horiz=($p_left+$p_right)/2" # integer division
     let "panel_center_vert=$p_top+$p_height/2" # integer division
     diff_horiz="$panel_center_horiz-$window_center_horiz"
@@ -254,7 +254,7 @@ closest_panel_idx="$(for (( i=0; i<$panels_len; i++ )); do
 declare -i next_panel_idx
 next_panel_idx="$closest_panel_idx+1"
 panel="${panels_extended[$next_panel_idx]}"
-IFS=';,' read -r p_left p_right p_height p_top wholescreen <<< "$panel"
+IFS=';,' read -r p_left p_right p_height p_top fullscreen <<< "$panel"
 eval "$(xdotool getactivewindow getwindowgeometry --shell)"
 # the above outputs something like:
 # WINDOW=70385876
@@ -273,6 +273,6 @@ declare -i p_width
 p_width="$p_right-$p_left-2*$border" # has something to do with 884/882 bug
 wmctrl -r :ACTIVE: -e "$gravity,$p_left,$p_top,$p_width,$p_height"
 
-if [ "$wholescreen" -eq "1" ]; then
+if [ "$fullscreen" -eq "1" ]; then
     wmctrl -r :ACTIVE: -b add,maximized_vert,maximized_horz
     fi
