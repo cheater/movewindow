@@ -24,6 +24,7 @@
 # that's smaller than that, for other uses.
 
 # log="/tmp/dbglog" # dbg
+# echo -n '' > "$log" # dbg
 # echo "-----------" >> "$log" # dbg
 
 # SETTINGS:
@@ -102,6 +103,7 @@ declare -i parts_with_overflow
 
 declare -a panels
 mapfile -t panels < <(echo "$monitor_info" | while IFS= read -r info; do
+    # echo info is "$info" >> "$log" # dbg
     # the output is: widthxheight+horizontal_offset+vertical_offset
     IFS='x+' read -r width height horizontal_offset vertical_offset <<< "$info"
     left="$horizontal_offset"
@@ -109,6 +111,7 @@ mapfile -t panels < <(echo "$monitor_info" | while IFS= read -r info; do
     width="$right-$left"
 
     wholescreen=0
+    # echo width is "$width" >> "$log" # dbg
     if [ "$width" -le "$max_width" ]; then
         wholescreen=1 # FIXME: fix this case, part of the rest of the logic should be skipped!
         fi
@@ -151,8 +154,8 @@ mapfile -t panels < <(echo "$monitor_info" | while IFS= read -r info; do
             done
         done
     done)
+# echo panels are: ${panels[@]} >> "$log" # dbg
 
-# echo columns are: ${columns[@]} >> "$log" # dbg
 # we need the panels plus one more, so if our window is at the last panel,
 # it can jump to the first panel. So we tack a copy of the first panel onto
 # the end of the list/array/whatever bash has.
@@ -264,7 +267,6 @@ eval "$(xdotool getactivewindow getwindowgeometry --shell)"
 #
 # do note, SCREEN has nothing to do with the monitor the window
 # is being displayed on.
-# dbg
 # (echo 'xdotool output: '; xdotool getactivewindow getwindowgeometry --shell) >> "$log" # dbg
 
 gravity=0
