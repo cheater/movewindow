@@ -251,7 +251,8 @@ closest_panel_idx="$(for (( i=0; i<$panels_len; i++ )); do
     done)"
 
 
-# Jump to next panel
+# Jump to next panel. Now that we know which panel we're on, let's go to the
+# next one.
 
 declare -i next_panel_idx
 next_panel_idx="$closest_panel_idx+1"
