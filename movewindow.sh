@@ -202,8 +202,10 @@ columns="$(echo "$monitor_info" | while IFS= read -r info; do
 # we need the columns plus one more, so if our window is at the last column,
 # it can jump to the first column. So we tack a copy of the first column onto
 # the end of the list/array/whatever bash has.
+#
+# awk '!x[$0]++' is like uniq but doesn't require sorting.
 columns_extended="$(
-    for r in ${columns[@]}; do echo "$r"; done
+    for r in ${columns[@]}; do echo "$r"; done | awk '!x[$0]++'
     for r in ${columns[@]}; do echo "$r"; break; done
     )"
 
