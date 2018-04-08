@@ -92,14 +92,14 @@ declare -i left
 declare -i right
 declare -i p_left
 declare -i p_right
-declare -i parts
-declare -i part
+declare -i panels_num
+declare -i panels_num_o
+declare -i panel_width
 declare -i start_
 declare -i end
 declare -i i
 declare -i j
 declare -i overflow_size
-declare -i parts_with_overflow
 # panels is an array which contains entries of the form x1,x2,h;y;f where x1 is
 # the starting pixel column on the screen and x2 is the final pixel column, h
 # is the height of the panel, y is the offset from top of desktop (i.e.
@@ -121,38 +121,38 @@ mapfile -t panels < <(echo "$monitor_info" | while IFS= read -r info; do
         # should be skipped!
         fi
 
-    parts="$width/$preferred_width" # $parts contains the amount of
+    panels_num="$width/$preferred_width" # $panels_num contains the amount of
     # panels of preferred size that will be created. There may also be an
     # overflow panel that will be less than preferred size.
     overflow=false
-    overflow_size="$width-$parts*$preferred_width"
+    overflow_size="$width-$panels_num*$preferred_width"
     if [ "$overflow_size" -ge "$min_width" ]; then
         overflow=true
         fi
 
-    parts_with_overflow="$parts" # $parts_with_overflow contains the amount
-    # of panels we will have with possibly an overflow panels that's smaller
-    # than the preferred size but still larger than the min size.
+    panels_num_o="$panels_num" # $panels_num_o contains the amount of panels we
+    # will have with possibly an overflow panel that's smaller than the
+    # preferred size but still larger than the min size.
 
-    part="$width/$parts" # $part contains the number of pixel columns
-    # which will form one panel. Note one pixel might be missing.
+    panel_width="$width/$panels_num" # $panel_width contains the number of pixel
+    # columns which will form one panel. Note one pixel might be missing.
 
     if $overflow; then
-        part="$preferred_width"
-        parts_with_overflow="$parts+1"
+        panel_width="$preferred_width"
+        panels_num_o="$panels_num+1"
         fi
 
-    for (( j=0; j<=parts_with_overflow; j++ )); do
-        for (( i=1; i<=parts_with_overflow; i++ )); do
-            if (( j<parts_with_overflow-1 && i+j<=parts_with_overflow )); then
-                start_="$left+($i-1)*$part"
-                if (( i+j == parts_with_overflow )); then
+    for (( j=0; j<=panels_num_o; j++ )); do
+        for (( i=1; i<=panels_num_o; i++ )); do
+            if (( j<panels_num_o-1 && i+j<=panels_num_o )); then
+                start_="$left+($i-1)*$panel_width"
+                if (( i+j == panels_num_o )); then
                     # The last panel might have one pixel column missing
                     # because we are dividing in the integers, so let us
                     # account for the division remainder here.
                     end="$right"
                 else
-                    end="$left+($i+$j)*$part"
+                    end="$left+($i+$j)*$panel_width"
                     fi
                 echo "$start_,$end,$height;$vertical_offset;$fullscreen"
                 fi
