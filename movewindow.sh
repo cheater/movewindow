@@ -161,6 +161,13 @@ mapfile -t panels < <(echo "$monitor_info" | while IFS= read -r info; do
     done)
 # echo panels are: ${panels[@]} >> "$log" # dbg
 
+
+# Find the current panel our window is on (or closest to). This will be done by
+# finding panels with a similar area to our window, and panels whose centers
+# are close to the center of the window, and then scoring panels based on those
+# two numbers. The panel with the best (lowest) score is the one that wins,
+# i.e. the one we guess we are on right now.
+
 eval "$(xdotool getactivewindow getwindowgeometry --shell)"
 # The above outputs something like:
 # WINDOW=70385876
