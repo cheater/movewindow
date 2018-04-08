@@ -1,13 +1,9 @@
 #!/bin/bash
-# The aim of this tool is to move a window to either the left or right monitor.
-# we assume there are two monitors, and they are side by side.
+# The aim of this tool is to move a window to subdivisions of physical monitors
+# which we call panels.
 
 # It is a workaround, since Marco (the window manager of MATE Desktop) cannot
 # properly do this. Even though there's a function for this, it is very broken.
-
-# For some reason, this tool has a bug. It makes the non-maximized vertical
-# size of the window equal to the vertical size of the previous monitor it was
-# displayed on.
 
 # You can use this tool by executing it with a key combination you set in your
 # window manager. First make sure this program is in $PATH. Then you need to
@@ -18,11 +14,14 @@
 # with its metacity window manager, and there are very likely ways to do this
 # with any other desktop software.
 
-# Now you can also break down very wide monitors into smaller ones. Define your
-# preferred width to break down to (that is the minimum width a sub-monitor
-# will have) and set the maximum width after which breaking down monitors
-# should occur, using the $preferred_width and $max_width variables
-# respectively.
+# You can break down very wide monitors into multiple panels. Define your
+# preferred width to break down to (that is the minimum width a panel will
+# have) and set the maximum width after which breaking down monitors should
+# start occuring, using the $preferred_width and $max_width variables
+# respectively. Set $min_width to define the minimum width of a panel. This is
+# useful for eg when your screen can only display 230 character wide lines, so
+# you'd like to have roughly two panels of 80 characters each, and another one
+# that's smaller than that, for other uses.
 
 # log="/tmp/dbglog" # dbg
 # echo "-----------" >> "$log" # dbg
@@ -85,8 +84,8 @@ declare -i height
 declare -i horizontal_offset
 declare -i left
 declare -i right
-declare -i range_left
-declare -i range_right
+declare -i p_left
+declare -i p_right
 declare -i parts
 declare -i part
 declare -i start_
@@ -95,30 +94,28 @@ declare -i i
 declare -i j
 declare -i overflow_size
 declare -i parts_with_overflow
-# columns is an array which contains entries of the form x1,x2,h;y;f where x1
-# is the starting pixel column on the screen and x2 is the final pixel column,
-# h is the height of the sub-display, y is the offset from top of desktop (i.e.
-# starting pixel row), and finally f is 1 if the sub-display takes up the whole
-# physical screen or 0 otherwise.
-# This is output for every virtual column.
+# panels is an array which contains entries of the form x1,x2,h;y;f where x1 is
+# the starting pixel column on the screen and x2 is the final pixel column, h
+# is the height of the panel, y is the offset from top of desktop (i.e.
+# starting pixel row), and finally f is 1 if the panel takes up the whole
+# physical screen or 0 otherwise. This is output for every panel.
 
-declare -a columns
-mapfile -t columns < <(echo "$monitor_info" | while IFS= read -r info; do
+declare -a panels
+mapfile -t panels < <(echo "$monitor_info" | while IFS= read -r info; do
     # the output is: widthxheight+horizontal_offset+vertical_offset
     IFS='x+' read -r width height horizontal_offset vertical_offset <<< "$info"
     left="$horizontal_offset"
     right="$left + $width"
     width="$right-$left"
 
+    wholescreen=0
     if [ "$width" -le "$max_width" ]; then
-        echo "$range_and_height_and_offset;1"
-        continue
+        wholescreen=1 # FIXME: fix this case, part of the rest of the logic should be skipped!
         fi
 
     parts="$width/$preferred_width" # $parts contains the amount of
-    # sub-monitors (columns) of preferred size that will be created. There
-    # may also be an overflow sub-monitor that will be less than preferred
-    # size.
+    # panels of preferred size that will be created. There may also be an
+    # overflow panel that will be less than preferred size.
     overflow=false
     overflow_size="$width-$parts*$preferred_width"
     if [ "$overflow_size" -ge "$min_width" ]; then
@@ -126,12 +123,11 @@ mapfile -t columns < <(echo "$monitor_info" | while IFS= read -r info; do
         fi
 
     parts_with_overflow="$parts" # $parts_with_overflow contains the amount
-    # of sub-monitors we will have with possibly an overflow sub-monitor
-    # that's smaller than the preferred size but still larger than the min
-    # size.
+    # of panels we will have with possibly an overflow panels that's smaller
+    # than the preferred size but still larger than the min size.
 
     part="$width/$parts" # $part contains the number of pixel columns
-    # which will form one sub-monitor. Note one pixel might be missing.
+    # which will form one panel. Note one pixel might be missing.
 
     if $overflow; then
         part="$preferred_width"
@@ -143,31 +139,29 @@ mapfile -t columns < <(echo "$monitor_info" | while IFS= read -r info; do
             if ((j<parts_with_overflow-1 && i+j<=parts_with_overflow)); then
                 start_="$left+($i-1)*$part"
                 if ((i+j == parts_with_overflow)); then
-                    # The last submonitor might have one pixel column
-                    # missing because we are dividing in the integers, so
-                    # let us account for the division remainder here.
+                    # The last panel might have one pixel column missing
+                    # because we are dividing in the integers, so let us
+                    # account for the division remainder here.
                     end="$right"
                 else
                     end="$left+($i+$j)*$part"
                     fi
-                wholescreen=0
                 echo "$start_,$end,$height;$vertical_offset;$wholescreen"
                 fi
             done
         done
     done)
 
-
 # echo columns are: ${columns[@]} >> "$log" # dbg
-# we need the columns plus one more, so if our window is at the last column,
-# it can jump to the first column. So we tack a copy of the first column onto
+# we need the panels plus one more, so if our window is at the last panel,
+# it can jump to the first panel. So we tack a copy of the first panel onto
 # the end of the list/array/whatever bash has.
 #
 # awk '!x[$0]++' is like uniq but doesn't require sorting.
-declare -a columns_extended
-mapfile -t columns_extended < <(
-    for r in "${columns[@]}"; do echo "$r"; done | awk '!x[$0]++'
-    for r in "${columns[@]}"; do echo "$r"; break; done
+declare -a panels_extended
+mapfile -t panels_extended < <(
+    for r in "${panels[@]}"; do echo "$r"; done | awk '!x[$0]++'
+    for r in "${panels[@]}"; do echo "$r"; break; done
     )
 
 eval "$(xdotool getactivewindow getwindowgeometry --shell)"
@@ -185,18 +179,17 @@ eval "$(xdotool getactivewindow getwindowgeometry --shell)"
 declare -i window_area
 window_area="$WIDTH*$HEIGHT"
 
-declare -i column_area
-declare -a columns_area_diff
-mapfile -t columns_area_diff < <(for virtual_column in ${columns[@]}; do
-    echo "virtual_column is: $virtual_column" >> "$log" # dbg
-    IFS=';,' read -r range_left range_right range_height range_vert_offset wholescreen <<< "$virtual_column"
-    column_area="($range_right-$range_left)*$range_height"
-    d="$window_area-$column_area"
+declare -i panel_area
+declare -a panels_area_diff
+mapfile -t panels_area_diff < <(for panel in ${panels[@]}; do
+    IFS=';,' read -r p_left p_right p_height p_vert_offset wholescreen <<< "$panel"
+    panel_area="($p_right-$p_left)*$p_height"
+    d="$window_area-$panel_area"
     echo "sqrt(sqrt(($d)^2))" | bc
     # We need to apply a second square root. Without it, we would have a result
     # which is a difference of area in square units; however, later on, we need
     # to create a score that is equally affected by the output of this, and the
-    # distance of window center to column center, which is in (non-square)
+    # distance of window center to panel center, which is in (non-square)
     # units. To do this properly, both have to have the same dimension. So we
     # either square root the result of this, or square the result of the other
     # thing, but using larger numbers is likely worse, so i opted for square
@@ -218,48 +211,48 @@ window_bottom="$window_top+$HEIGHT"
 declare -i window_center_vert
 let "window_center_vert=($window_top+$window_bottom)/2" # integer division
 
-declare -i column_center_horiz
-declare -i column_center_vert
-declare -a columns_center_diff
-mapfile -t columns_center_diff < <(for virtual_column in "${columns[@]}"; do
-    IFS=';,' read -r range_left range_right range_height range_vert_offset wholescreen <<< "$virtual_column"
-    let "column_center_horiz=($range_left+$range_right)/2" # integer division
-    let "column_center_vert=$range_vert_offset+$range_height/2" # integer division
-    diff_horiz="$column_center_horiz-$window_center_horiz"
-    diff_vert="$column_center_vert-$window_center_vert"
+declare -i panel_center_horiz
+declare -i panel_center_vert
+declare -a panels_center_diff
+mapfile -t panels_center_diff < <(for panel in "${panels[@]}"; do
+    IFS=';,' read -r p_left p_right p_height p_vert_offset wholescreen <<< "$panel"
+    let "panel_center_horiz=($p_left+$p_right)/2" # integer division
+    let "panel_center_vert=$p_vert_offset+$p_height/2" # integer division
+    diff_horiz="$panel_center_horiz-$window_center_horiz"
+    diff_vert="$panel_center_vert-$window_center_vert"
     echo "sqrt(($diff_horiz)^2+($diff_vert)^2)" | bc
     done)
 
-declare -i columns_len
-columns_amt=${#columns[@]}
-columns_len="$columns_amt-1"
+declare -i panels_len
+panels_amt=${#panels[@]} # FIXME: remove this variable
+panels_len="$panels_amt-1"
 
-declare -a columns_score
-for (( i=0; i<=columns_len; i++ )); do
-    a=${columns_area_diff[$i]}
-    c=${columns_center_diff[$i]}
-    columns_score[$i]=$(echo "sqrt(($a)^2+($c)^2)" | bc)
+declare -a panels_score
+for (( i=0; i<=panels_len; i++ )); do
+    a=${panels_area_diff[$i]}
+    c=${panels_center_diff[$i]}
+    panels_score[$i]=$(echo "sqrt(($a)^2+($c)^2)" | bc)
     done
 
-declare -i columns_score_min
-columns_score_min=${columns_score[0]}
-for n in ${columns_score[@]}; do
-    if [ "$n" -lt "$columns_score_min" ]; then columns_score_min=$n; fi
+declare -i panels_score_min
+panels_score_min=${panels_score[0]}
+for n in ${panels_score[@]}; do
+    if [ "$n" -lt "$panels_score_min" ]; then panels_score_min=$n; fi
     done
 
-closest_column_idx="$(for (( i=0; i<=$columns_len; i++ )); do
-    if [ "$columns_score_min" -eq "${columns_score[$i]}" ]; then
+closest_panel_idx="$(for (( i=0; i<=$panels_len; i++ )); do
+    if [ "$panels_score_min" -eq "${panels_score[$i]}" ]; then
         echo "$i"
         break
         fi
     done)"
 
-# Jump to next virtual column
+# Jump to next panel
 
-declare -i closest_column_idx_next
-closest_column_idx_next="$closest_column_idx+1"
-virtual_column="${columns_extended[$closest_column_idx_next]}"
-IFS=';,' read -r range_left range_right range_height range_vert_offset wholescreen <<< "$virtual_column"
+declare -i closest_panel_idx_next # FIXME: rename me
+closest_panel_idx_next="$closest_panel_idx+1"
+panel="${panels_extended[$closest_panel_idx_next]}"
+IFS=';,' read -r p_left p_right p_height p_vert_offset wholescreen <<< "$panel"
 eval "$(xdotool getactivewindow getwindowgeometry --shell)"
 # the above outputs something like:
 # WINDOW=70385876
@@ -275,8 +268,8 @@ eval "$(xdotool getactivewindow getwindowgeometry --shell)"
 # (echo 'xdotool output: '; xdotool getactivewindow getwindowgeometry --shell) >> "$log" # dbg
 
 gravity=0
-width="$range_right-$range_left-2*$border" # has something to do with 884/882 bug
-wmctrl -r :ACTIVE: -e "$gravity,$range_left,$range_vert_offset,$width,$range_height"
+width="$p_right-$p_left-2*$border" # has something to do with 884/882 bug
+wmctrl -r :ACTIVE: -e "$gravity,$p_left,$p_vert_offset,$width,$p_height"
 
 if [ "$wholescreen" -eq "1" ]; then
     wmctrl -r :ACTIVE: -b add,maximized_vert,maximized_horz
