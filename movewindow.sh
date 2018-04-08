@@ -131,10 +131,10 @@ columns="$(echo "$monitor_info" | while IFS= read -r info; do
     left="$horiz_offset"
     right="$left + $width"
     echo "$left,$right;$vertical_offset" # we are echoing the dimensions of
-    # monitors; not virtual columns that we will move the panels to. The
-    # format is x1,x2;y. It is missing information on correspondence of
-    # virtual columns to physical monitors, since everything we echo here is
-    # a physical monitor.
+    # physical monitors as reported by X; not virtual columns that we will move
+    # the panels to. The format is x1,x2;y. It is missing information on
+    # correspondence of virtual columns to physical monitors, since everything
+    # we echo here is a physical monitor.
     done | while IFS= read -r range_and_offset; do
         # echo range_and_offset is: "$range_and_offset" >> "$log" # dbg
         range=${range_and_offset%%;*}
