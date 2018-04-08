@@ -27,7 +27,12 @@
 # echo -n '' > "$log" # dbg
 # echo "-----------" >> "$log" # dbg
 
-# SETTINGS:
+
+
+
+############
+# SETTINGS #
+############
 
 min_width=750
 preferred_width=884 # bug: why does this need to be 884 for the windows to
