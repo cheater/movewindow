@@ -185,7 +185,7 @@ window_area="$WIDTH*$HEIGHT"
 declare -i panel_area
 declare -a panels_area_diff
 mapfile -t panels_area_diff < <(for panel in ${panels[@]}; do
-    IFS=';,' read -r p_left p_right p_height p_vert_offset wholescreen <<< "$panel"
+    IFS=';,' read -r p_left p_right p_height p_top wholescreen <<< "$panel"
     panel_area="($p_right-$p_left)*$p_height"
     d="$window_area-$panel_area"
     echo "sqrt(sqrt(($d)^2))" | bc
@@ -218,9 +218,9 @@ declare -i panel_center_horiz
 declare -i panel_center_vert
 declare -a panels_center_diff
 mapfile -t panels_center_diff < <(for panel in "${panels[@]}"; do
-    IFS=';,' read -r p_left p_right p_height p_vert_offset wholescreen <<< "$panel"
+    IFS=';,' read -r p_left p_right p_height p_top wholescreen <<< "$panel"
     let "panel_center_horiz=($p_left+$p_right)/2" # integer division
-    let "panel_center_vert=$p_vert_offset+$p_height/2" # integer division
+    let "panel_center_vert=$p_top+$p_height/2" # integer division
     diff_horiz="$panel_center_horiz-$window_center_horiz"
     diff_vert="$panel_center_vert-$window_center_vert"
     echo "sqrt(($diff_horiz)^2+($diff_vert)^2)" | bc
@@ -254,7 +254,7 @@ closest_panel_idx="$(for (( i=0; i<$panels_len; i++ )); do
 declare -i next_panel_idx
 next_panel_idx="$closest_panel_idx+1"
 panel="${panels_extended[$next_panel_idx]}"
-IFS=';,' read -r p_left p_right p_height p_vert_offset wholescreen <<< "$panel"
+IFS=';,' read -r p_left p_right p_height p_top wholescreen <<< "$panel"
 eval "$(xdotool getactivewindow getwindowgeometry --shell)"
 # the above outputs something like:
 # WINDOW=70385876
@@ -269,8 +269,9 @@ eval "$(xdotool getactivewindow getwindowgeometry --shell)"
 # (echo 'xdotool output: '; xdotool getactivewindow getwindowgeometry --shell) >> "$log" # dbg
 
 gravity=0
-width="$p_right-$p_left-2*$border" # has something to do with 884/882 bug
-wmctrl -r :ACTIVE: -e "$gravity,$p_left,$p_vert_offset,$width,$p_height"
+declare -i p_width
+p_width="$p_right-$p_left-2*$border" # has something to do with 884/882 bug
+wmctrl -r :ACTIVE: -e "$gravity,$p_left,$p_top,$p_width,$p_height"
 
 if [ "$wholescreen" -eq "1" ]; then
     wmctrl -r :ACTIVE: -b add,maximized_vert,maximized_horz
