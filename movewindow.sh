@@ -160,6 +160,7 @@ columns="$(echo "$monitor_info" | while IFS= read -r info; do
         if [ "$overflow_size" -ge "$min_width" ]; then
             overflow=true
             fi
+
         parts_with_overflow="$parts" # $parts_with_overflow contains the amount
         # of sub-monitors we will have with possibly an overflow sub-monitor
         # that's smaller than the preferred size but still larger than the min
