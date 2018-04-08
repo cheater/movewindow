@@ -234,9 +234,9 @@ panels_len=${#panels[@]}
 
 declare -a panels_score
 for (( i=0; i<panels_len; i++ )); do
-    a=${panels_area_diff[$i]}
-    c=${panels_center_diff[$i]}
-    panels_score[$i]=$(echo "sqrt(($a)^2+($c)^2)" | bc)
+    a=${panels_area_diff[i]}
+    c=${panels_center_diff[i]}
+    panels_score[i]=$(echo "sqrt(($a)^2+($c)^2)" | bc)
     done
 
 declare -i panels_score_min
@@ -246,7 +246,7 @@ for n in ${panels_score[@]}; do
     done
 
 closest_panel_idx="$(for (( i=0; i<$panels_len; i++ )); do
-    if [ "$panels_score_min" -eq "${panels_score[$i]}" ]; then
+    if [ "$panels_score_min" -eq "${panels_score[i]}" ]; then
         echo "$i"
         break
         fi
@@ -266,7 +266,7 @@ declare -a panels_extended
 panels_extended=("${panels[@]}")
 panels_extended+=("${panels[0]}")
 
-panel="${panels_extended[$next_panel_idx]}"
+panel="${panels_extended[next_panel_idx]}"
 IFS=';,' read -r p_left p_right p_height p_top fullscreen <<< "$panel"
 eval "$(xdotool getactivewindow getwindowgeometry --shell)"
 # the above outputs something like:
