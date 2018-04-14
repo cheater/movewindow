@@ -1,17 +1,22 @@
 #!/bin/bash
-# The aim of this tool is to move a window to subdivisions of physical monitors
-# which we call panels.
+# This is a tiling window manager. It breaks a desktop - which may be composed
+# of multiple monitors - into units we call panels.
+
+# Invoking this script will move the current active window to the next panel.
+
+# This script has one argument. If there is a first argument (even if it's
+# empty), the window will cycle backwards in the list of panels.
 
 # It is a workaround, since Marco (the window manager of MATE Desktop) cannot
 # properly do this. Even though there's a function for this, it is very broken.
 
-# You can use this tool by executing it with a key combination you set in your
-# window manager. First make sure this program is in $PATH. Then you need to
-# set up the key combo. For MATE Desktop, open mateconf-editor and navigate to
-# apps/marco/keybinding_commands and type in the name of the executable in one
-# of the items. Then, under apps/marco/global_keybindings/run_command_n, set
-# the keyboard combination. That's it! A similar procedure works for GNOME 2
-# with its metacity window manager, and there are very likely ways to do this
+# You can use this script by executing it with a key combination you set in
+# your window manager. First make sure this program is in $PATH. Then you need
+# to set up the key combo. For MATE Desktop, open mateconf-editor and navigate
+# to apps/marco/keybinding_commands and type in the name of the executable in
+# one of the items. Then, under apps/marco/global_keybindings/run_command_n,
+# set the keyboard combination. That's it! A similar procedure works for GNOME
+# 2 with its metacity window manager, and there are very likely ways to do this
 # with any other desktop software.
 
 # You can break down very wide monitors into multiple panels. Define your
