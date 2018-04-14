@@ -28,6 +28,12 @@
 # echo "-----------" >> "$log" # dbg
 
 
+# Check for the existence of the first argument and set movement to forward or
+# backward according to what was detected.
+forward=true
+if [ "$#" -ge 1 ]; then
+  forward=false
+  fi
 
 
 ############
@@ -256,14 +262,19 @@ closest_panel_idx="$(for (( i=0; i<$panels_len; i++ )); do
 # Jump to next panel. Now that we know which panel we're on, let's go to the
 # next one.
 
-# we need the panels plus one more, so if our window is at the last panel,
-# it can jump to the first panel. So we tack a copy of the first panel onto
-# the end of the list/array/whatever bash has.
-declare -a panels_extended
-panels_extended=("${panels[@]}")
-panels_extended+=("${panels[0]}")
+movement=1
+if ! "$forward"; then
+  movement='-1'
+  fi
 
-panel="${panels_extended[closest_panel_idx+1]}"
+# Note: the % operator (modulo operator) in bash is "broken" in that x % n
+# doesn't change x when -n < x < n, meaning it allows negative values. However,
+# bash arrays can be indexed by negative values, and the thing we expect will
+# happen, so it's two "broken" features that are "broken" consistently, working
+# together to create a system that's not broken after all.
+new_idx=$(( ( closest_panel_idx + movement ) % ${#panels[@]} ))
+panel="${panels[new_idx]}"
+
 IFS=';,' read -r p_left p_right p_height p_top fullscreen <<< "$panel"
 eval "$(xdotool getactivewindow getwindowgeometry --shell)"
 # the above outputs something like:
